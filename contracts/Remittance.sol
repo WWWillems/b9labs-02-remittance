@@ -44,7 +44,6 @@ contract Remittance {
 
         require(bytes(_puzzleblock1).length > 0);
         require(bytes(_puzzleblock2).length > 0);
-        require(!compareStrings(_puzzleblock1, _puzzleblock2));
 
         // Compare input with puzzle, attempt to solve it
         if(keccak256(_puzzleblock1, _puzzleblock2) == puzzle){
@@ -77,14 +76,7 @@ contract Remittance {
 
         return true;
     }
-
-    function compareStrings (string a, string b)
-    private
-    view
-    returns (bool){
-        return keccak256(a) == keccak256(b);
-    }
-
+ 
     function kill()
     public {
         require(msg.sender == owner);
