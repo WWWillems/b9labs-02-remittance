@@ -9,27 +9,25 @@ contract Remittance {
 
     mapping(address => uint) public balances;
 
-    event LogCreation(address indexed by, uint amount);
+    event LogCreation(address indexed by, uint amount, bytes32 puzzle);
     event LogKill(address indexed by);
-    event LogPuzzleSolve(address indexed by);
+    event LogPuzzleSolve(address indexed by, uint amount);
     event LogWithdrawal(address indexed from, address indexed to, uint amount);
 
     // Constructor
-    function Remittance(string puzzleblock1, string puzzleblock2)
+    function Remittance(bytes32 _puzzle)
     payable
     public {
         require(msg.value > 0);
         require(msg.sender != address(0x0));
-
-        require(bytes(puzzleblock1).length > 0);
-        require(bytes(puzzleblock2).length > 0);
-        require(!compareStrings(puzzleblock1, puzzleblock2));
+        require(_puzzle != keccak256(''));
+        require(_puzzle.length > 0);
 
         owner = msg.sender;
         balances[owner] = msg.value;
-        puzzle = keccak256(puzzleblock1, puzzleblock2);
+        puzzle = _puzzle;
 
-        emit LogCreation(msg.sender, msg.value);
+        emit LogCreation(msg.sender, msg.value, puzzle);
     }
 
     // Fallback function
@@ -57,7 +55,7 @@ contract Remittance {
             balances[owner] = 0;
             balances[msg.sender] = amount;
 
-            emit LogPuzzleSolve(msg.sender);
+            emit LogPuzzleSolve(msg.sender, amount);
         }
     }
 
