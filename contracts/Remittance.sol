@@ -38,7 +38,7 @@ contract Remittance {
         revert();
     }
 
-    function submitPasswords(string _password)
+    function submitPassword(string _password)
     public
     returns (bool success)
     {
