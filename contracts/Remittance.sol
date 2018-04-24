@@ -21,7 +21,7 @@ contract Remittance {
         require(msg.value > 0);
         require(msg.sender != address(0x0));
         require(_puzzle != keccak256(''));
-        require(_puzzle.length > 0);
+        require(msg.data.length == 36);
 
         owner = msg.sender;
         balances[owner] = msg.value;
@@ -39,30 +39,29 @@ contract Remittance {
     function submitPasswords(string _puzzleblock1, string _puzzleblock2)
     public
     {
-        assert(!isPuzzleSolved);
-        require(msg.sender != address(0x0));
+        require(!isPuzzleSolved);
 
         require(bytes(_puzzleblock1).length > 0);
         require(bytes(_puzzleblock2).length > 0);
 
         // Compare input with puzzle, attempt to solve it
-        if(keccak256(_puzzleblock1, _puzzleblock2) == puzzle){
-            isPuzzleSolved = true;
+        if(keccak256(_puzzleblock1, _puzzleblock2) != puzzle) revert();
 
-            uint amount = balances[owner];
+        isPuzzleSolved = true;
 
-            balances[owner] = 0;
-            balances[msg.sender] = amount;
+        uint amount = balances[owner];
 
-            emit LogPuzzleSolve(msg.sender, amount);
-        }
+        balances[owner] = 0;
+        balances[msg.sender] = amount;
+
+        emit LogPuzzleSolve(msg.sender, amount);
     }
 
     // Recipients can use this function to withdraw their part of the payments
     function withdrawFunds()
     public
     returns (bool success){
-        assert(isPuzzleSolved);
+        require(isPuzzleSolved);
 
         uint amount = balances[msg.sender];
         require(amount > 0);
@@ -76,7 +75,7 @@ contract Remittance {
 
         return true;
     }
- 
+
     function kill()
     public {
         require(msg.sender == owner);
