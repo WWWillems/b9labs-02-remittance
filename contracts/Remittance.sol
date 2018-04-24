@@ -7,6 +7,7 @@ contract Remittance {
     address public owner;
     bytes32 public puzzle;
     bool public isPuzzleSolved;
+    address public recipient;
 
 
     mapping(address => uint) public balances;
@@ -28,8 +29,9 @@ contract Remittance {
         owner = msg.sender;
         balances[owner] = msg.value;
         puzzle = _password;
+        recipient = _recipient;
 
-        emit LogCreation(msg.sender, _recipient, msg.value, puzzle);
+        emit LogCreation(msg.sender, recipient, msg.value, puzzle);
     }
 
     // Fallback function
@@ -38,15 +40,15 @@ contract Remittance {
         revert();
     }
 
-    function submitPassword(string _password)
+    function submitPassword(bytes32 _password)
     public
     returns (bool success)
     {
         require(!isPuzzleSolved);
-        require(bytes(_password).length > 0);
+        require(_password.length > 0);
 
         // Compare input with puzzle, attempt to solve it
-        require(keccak256(_password, msg.sender) == puzzle);
+        require(hashVal(_password) == puzzle);
 
         isPuzzleSolved = true;
 
@@ -59,15 +61,14 @@ contract Remittance {
         emit LogPuzzleSolve(msg.sender, amount, puzzle);
 
         // Start withdrawal
-        require(isPuzzleSolved);
         require(amount > 0);
 
         // Remember to zero the pending refund before
         // sending to prevent re-entrancy attacks
         balances[msg.sender] = 0;
-        emit LogWithdrawal(msg.sender, msg.sender, amount);
+        emit LogWithdrawal(owner, recipient, amount);
 
-        msg.sender.transfer(amount);
+        recipient.transfer(amount);
 
         return true;
     }
@@ -75,7 +76,7 @@ contract Remittance {
     // Lock-in hash function:
     // If your function is declared as view or pure you can call it from javascript without paying gas,
     // and it should return   the exact same result that when it is called from inside the contract
-    function hashVal(string val) public view returns (bytes32) {
+    function hashVal(bytes32 val) public view returns (bytes32) {
         return keccak256(val, msg.sender);
     }
 
