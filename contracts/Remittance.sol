@@ -86,16 +86,6 @@ contract Remittance {
         return true;
     }
 
-    // Helper function, handy when using Remix
-    function displayPuzzle()
-    public
-    view
-    returns (bytes32 puzzle)
-    {
-        RemittanceStruct storage remittance = remittances[msg.sender];
-        return remittance.puzzle;
-    }
-
     // Lock-in hash function:
     // If your function is declared as view or pure you can call it from javascript without paying gas,
     // and it should return   the exact same result that when it is called from inside the contract
