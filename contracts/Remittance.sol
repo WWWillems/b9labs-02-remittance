@@ -44,6 +44,7 @@ contract Remittance {
     public
     returns (bool success)
     {
+        require(msg.sender == recipient);
         require(!isPuzzleSolved);
         require(_password.length > 0);
 
@@ -54,21 +55,15 @@ contract Remittance {
 
         // Unlock funds from owner->recipient
         uint amount = balances[owner];
-
         balances[owner] = 0;
-        balances[msg.sender] = amount;
-
         emit LogPuzzleSolve(msg.sender, amount, puzzle);
 
         // Start withdrawal
         require(amount > 0);
 
-        // Remember to zero the pending refund before
-        // sending to prevent re-entrancy attacks
-        balances[msg.sender] = 0;
-        emit LogWithdrawal(owner, recipient, amount);
+        emit LogWithdrawal(owner, msg.sender, amount);
 
-        recipient.transfer(amount);
+        msg.sender.transfer(amount);
 
         return true;
     }
