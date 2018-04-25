@@ -81,7 +81,6 @@ contract Remittance is Owned {
     {
         RemittanceStruct storage remittance = remittances[msg.sender];
         require(remittance.amount > 0);
-        require(remittance.puzzle != bytes32(0));
 
         // Compare input with puzzle, attempt to solve it
         require(hashVal(_puzzle, msg.sender) == remittance.puzzle);
