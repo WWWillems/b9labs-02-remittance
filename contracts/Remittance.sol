@@ -1,37 +1,30 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.23;
 
 // CHECK - EFFECS - INTEGRATIONS
 
 contract Remittance {
 
     address public owner;
-    bytes32 public puzzle;
-    bool public isPuzzleSolved;
-    address public recipient;
 
+    struct RemittanceStruct {
+        address owner;
+        uint amount;
+        bytes32 puzzle;
+        bool isPuzzleSolved;
+        bool isInitialised;
+    }
 
-    mapping(address => uint) public balances;
+    mapping(address => RemittanceStruct) public remittances;
 
-    event LogCreation(address indexed by, address indexed recipient, uint amount, bytes32 puzzle);
+    event LogCreation(RemittanceStruct indexed remittance);
     event LogKill(address indexed by);
-    event LogPuzzleSolve(address indexed by, uint amount, bytes32 puzzle);
-    event LogWithdrawal(address indexed from, address indexed to, uint amount);
+    event LogPuzzleSolve(RemittanceStruct indexed remittance);
+    event LogWithdrawal(RemittanceStruct indexed remittance);
 
     // Constructor
-    function Remittance(bytes32 _password, address _recipient)
-    payable
+    constructor()
     public {
-        require(msg.value > 0);
-        require(msg.sender != address(0x0));
-        require(_recipient != address(0x0));
-        require(_password != keccak256(''));
-
         owner = msg.sender;
-        balances[owner] = msg.value;
-        puzzle = _password;
-        recipient = _recipient;
-
-        emit LogCreation(msg.sender, recipient, msg.value, puzzle);
     }
 
     // Fallback function
@@ -40,38 +33,73 @@ contract Remittance {
         revert();
     }
 
-    function submitPassword(bytes32 _password)
+    function createRemittance(bytes32 _password, address _recipient)
+    public
+    payable
+    returns (bool success)
+    {
+        require(msg.value > 0);
+        require(msg.sender != address(0x0));
+        require(_recipient != address(0x0));
+        require(_password != keccak256(''));
+
+        RemittanceStruct memory newRemittance;
+        newRemittance.owner = msg.sender;
+        newRemittance.amount = msg.value;
+        newRemittance.puzzle = _password;
+        newRemittance.isInitialised = true;
+
+        remittances[_recipient] = newRemittance;
+
+        emit LogCreation(newRemittance);
+
+        return true;
+    }
+
+    function submitPassword(string _password)
     public
     returns (bool success)
     {
-        require(msg.sender == recipient);
-        require(!isPuzzleSolved);
-        require(_password.length > 0);
+        RemittanceStruct storage remittance = remittances[msg.sender];
+        require(remittance.isInitialised);
+        require(remittance.amount > 0);
+        require(remittance.puzzle != keccak256(''));
+        require(!remittance.isPuzzleSolved);
 
         // Compare input with puzzle, attempt to solve it
-        require(hashVal(_password) == puzzle);
+        //require(_password.length > 0);
+        require(hashVal(_password) == remittance.puzzle);
 
-        isPuzzleSolved = true;
+        remittance.isPuzzleSolved = true;
 
         // Unlock funds from owner->recipient
-        uint amount = balances[owner];
-        balances[owner] = 0;
-        emit LogPuzzleSolve(msg.sender, amount, puzzle);
+        uint amount = remittance.amount;
+        delete remittances[msg.sender];
+
+        emit LogPuzzleSolve(remittance);
 
         // Start withdrawal
-        require(amount > 0);
-
-        emit LogWithdrawal(owner, msg.sender, amount);
+        emit LogWithdrawal(remittance);
 
         msg.sender.transfer(amount);
 
         return true;
     }
 
+    // Helper function, handy when using Remix
+    function displayPuzzle()
+    public
+    view
+    returns (bytes32 puzzle)
+    {
+        RemittanceStruct storage remittance = remittances[msg.sender];
+        return remittance.puzzle;
+    }
+
     // Lock-in hash function:
     // If your function is declared as view or pure you can call it from javascript without paying gas,
     // and it should return   the exact same result that when it is called from inside the contract
-    function hashVal(bytes32 val) public view returns (bytes32) {
+    function hashVal(string val) public view returns (bytes32) {
         return keccak256(val, msg.sender);
     }
 
