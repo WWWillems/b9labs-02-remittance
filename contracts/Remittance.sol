@@ -30,8 +30,6 @@ contract Remittance is Owned {
         address owner;
         uint amount;
         bytes32 puzzle;
-        bool isPuzzleSolved;
-        bool isInitialised;
     }
 
     mapping(address => RemittanceStruct) public remittances;
@@ -59,15 +57,16 @@ contract Remittance is Owned {
     returns (bool success)
     {
         require(msg.value > 0);
-        require(msg.sender != address(0x0));
         require(_recipient != address(0x0));
-        require(_password != keccak256(''));
+        require(_password != bytes32(0));
+
+        // Make sure we're not overwriting an existing Remittance
+        require(remittances[_recipient].puzzle == bytes32(0));
 
         RemittanceStruct memory newRemittance;
         newRemittance.owner = msg.sender;
         newRemittance.amount = msg.value;
         newRemittance.puzzle = _password;
-        newRemittance.isInitialised = true;
 
         remittances[_recipient] = newRemittance;
 
@@ -76,21 +75,16 @@ contract Remittance is Owned {
         return true;
     }
 
-    function submitPassword(string _password)
+    function submitPassword(string _puzzle)
     public
     returns (bool success)
     {
         RemittanceStruct storage remittance = remittances[msg.sender];
-        require(remittance.isInitialised);
         require(remittance.amount > 0);
-        require(remittance.puzzle != keccak256(''));
-        require(!remittance.isPuzzleSolved);
+        require(remittance.puzzle != bytes32(0));
 
         // Compare input with puzzle, attempt to solve it
-        //require(_password.length > 0);
-        require(hashVal(_password) == remittance.puzzle);
-
-        remittance.isPuzzleSolved = true;
+        require(hashVal(_puzzle) == remittance.puzzle);
 
         // Unlock funds from owner->recipient
         uint amount = remittance.amount;
