@@ -37,7 +37,7 @@ contract Remittance is Owned {
     event LogCreation(RemittanceStruct indexed remittance);
     event LogKill(address indexed by);
     event LogPuzzleSolve(RemittanceStruct indexed remittance);
-    event LogWithdrawal(RemittanceStruct indexed remittance);
+    event LogWithdrawal(address indexed from, address indexed to, uint amount);
 
     // Constructor
     constructor()
@@ -93,7 +93,7 @@ contract Remittance is Owned {
         emit LogPuzzleSolve(remittance);
 
         // Start withdrawal
-        emit LogWithdrawal(remittance);
+        emit LogWithdrawal(remittance.owner, msg.sender, remittance.amount);
 
         msg.sender.transfer(amount);
 
