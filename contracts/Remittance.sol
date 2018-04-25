@@ -84,7 +84,7 @@ contract Remittance is Owned {
         require(remittance.puzzle != bytes32(0));
 
         // Compare input with puzzle, attempt to solve it
-        require(hashVal(_puzzle) == remittance.puzzle);
+        require(hashVal(_puzzle, msg.sender) == remittance.puzzle);
 
         // Unlock funds from owner->recipient
         uint amount = remittance.amount;
@@ -103,8 +103,8 @@ contract Remittance is Owned {
     // Lock-in hash function:
     // If your function is declared as view or pure you can call it from javascript without paying gas,
     // and it should return   the exact same result that when it is called from inside the contract
-    function hashVal(string val) public view returns (bytes32) {
-        return keccak256(val, msg.sender);
+    function hashVal(string val, address recipientAddress) public pure returns (bytes32) {
+        return keccak256(val, recipientAddress);
     }
 
     function kill()
