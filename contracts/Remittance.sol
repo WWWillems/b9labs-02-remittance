@@ -1,10 +1,30 @@
 pragma solidity ^0.4.23;
 
-// CHECK - EFFECS - INTEGRATIONS
+contract Owned {
+    address public owner = msg.sender;
 
-contract Remittance {
+	modifier only_owner {
+	    require(msg.sender == owner);
+	    _;
+	}
 
-    address public owner;
+	event NewOwner(address indexed old, address indexed current);
+
+    function setOwner(address _new)
+    only_owner
+    public {
+        emit NewOwner(owner, _new);
+        owner = _new;
+    }
+
+	// Constructor
+    constructor()
+    public {
+        setOwner(msg.sender);
+    }
+}
+
+contract Remittance is Owned {
 
     struct RemittanceStruct {
         address owner;
