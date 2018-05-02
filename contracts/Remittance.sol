@@ -20,7 +20,7 @@ contract Remittance is Owned {
     // Constructor
     constructor()
     public {
-        owner = msg.sender;
+
     }
 
     // Fallback function
