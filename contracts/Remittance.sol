@@ -1,28 +1,6 @@
 pragma solidity ^0.4.23;
 
-contract Owned {
-    address public owner = msg.sender;
-
-	modifier only_owner {
-	    require(msg.sender == owner);
-	    _;
-	}
-
-	event NewOwner(address indexed old, address indexed current);
-
-    function setOwner(address _new)
-    only_owner
-    public {
-        emit NewOwner(owner, _new);
-        owner = _new;
-    }
-
-	// Constructor
-    constructor()
-    public {
-        setOwner(msg.sender);
-    }
-}
+import "./Owned.sol";
 
 contract Remittance is Owned {
 
