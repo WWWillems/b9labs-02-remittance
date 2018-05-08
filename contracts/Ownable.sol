@@ -1,7 +1,7 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
-contract Owned {
-    address private owner;
+contract Ownable {
+    address public owner;
 
 	modifier only_owner {
 	    require(msg.sender == owner);
@@ -20,9 +20,10 @@ contract Owned {
     only_owner
     public {
         require(_new != owner);
-
-        owner = _new;
+        require(_new != address(0));
 
         emit LogNewOwner(owner, _new);
+
+        owner = _new;
     }
 }

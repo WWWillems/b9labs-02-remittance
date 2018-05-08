@@ -1,8 +1,8 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
-import "./Owned.sol";
+import "./Ownable.sol";
 
-contract Remittance is Owned {
+contract Remittance is Ownable {
 
     struct RemittanceStruct {
         address owner;
